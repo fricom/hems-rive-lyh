@@ -1,6 +1,6 @@
 'use client';
 
-import { useRive } from '@rive-app/react-canvas';
+import { useRive, Layout, Fit, Alignment } from '@rive-app/react-canvas';
 import { useState, useEffect, useCallback } from 'react';
 
 const ARTBOARD      = 'realTime whole';
@@ -21,6 +21,7 @@ export default function EnergyDashboard() {
     Object.fromEntries(INPUT_DEFS.map(d => [d.key, false]))
   );
   const [ready, setReady] = useState(false);
+  const [aspect, setAspect] = useState<string>('16 / 9');
 
   const { rive, RiveComponent } = useRive({
     src: '/rives/eresource.riv',
@@ -28,12 +29,19 @@ export default function EnergyDashboard() {
     stateMachines: STATE_MACHINE,
     autoplay: true,
     autoBind: true,
+    layout: new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
   } as any);
 
   useEffect(() => {
     if (!rive) return;
-    const vmi = (rive as any).viewModelInstance;
-    if (vmi) setReady(true);
+    const r = rive as any;
+    const w = r.artboardWidth;
+    const h = r.artboardHeight;
+    if (w && h) {
+      setAspect(`${w} / ${h}`);
+      console.log('[Rive] artboard size:', w, 'x', h);
+    }
+    if (r.viewModelInstance) setReady(true);
   }, [rive]);
 
   const handleToggle = useCallback((key: string, checked: boolean) => {
@@ -60,7 +68,10 @@ export default function EnergyDashboard() {
         <h2 className="text-xl font-bold mb-3 text-indigo-600 uppercase tracking-tight">
           Energy Flow Control
         </h2>
-        <div className="flex-1 min-h-0 bg-slate-950 rounded-xl overflow-hidden shadow-2xl">
+        <div
+          className="w-full bg-slate-950 rounded-xl overflow-hidden shadow-2xl"
+          style={{ aspectRatio: aspect }}
+        >
           <RiveComponent className="w-full h-full" />
         </div>
       </div>
